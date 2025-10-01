@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+//output   = "../src/generated/prisma"
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String    @id @default(uuid())
+  name       String
+  email      String    @unique
+  password   String
+  bio        String?
+  profilePic String? // URL to profile picture
+  resume     String? // for .pdf
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  posts      Post[]
+  comments   Comment[]
+  followers  Follow[]  @relation("FollowingRelation")
+  following  Follow[]  @relation("FollowerRelation")
+  files      File[]
+}
+
+model Post {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  comments Comment[]
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  postId String
+  post   Post   @relation(fields: [postId], references: [id])
+
+  parentCommentId String?
+  parentComment   Comment?  @relation("CommentHierarchy", fields: [parentCommentId], references: [id])
+  childComments   Comment[] @relation("CommentHierarchy")
+}
+
+model Follow {
+  followerId  String
+  followingId String
+
+  follower  User @relation("FollowerRelation", fields: [followerId], references: [id])
+  following User @relation("FollowingRelation", fields: [followingId], references: [id])
+
+  @@id([followerId, followingId]) // Composite primary key to prevent duplicate follows
+}
+
+model File {
+  id        String   @id @default(uuid())
+  url       String
+  type      String // "image" or "pdf"
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
