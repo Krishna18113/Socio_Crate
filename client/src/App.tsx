@@ -7,6 +7,7 @@ import PrivateRoute from "./components/PrivateRoute";
 import FeedPage from "./pages/FeedPage";
 import { Toaster } from 'react-hot-toast';
 import ProfilePage from "./pages/ProfilePage";
+import ResumeAnalyzerPage from "./pages/ResumeAnalyzerPage"; // NEW IMPORT
 
 function App() {
   return (
@@ -27,6 +28,15 @@ function App() {
           <Route path="/feed" element={<FeedPage />} />
           {/* <Route path="/user/:id" element={<ProfilePage />} /> */}
           <Route path="/users/:id" element={<ProfilePage />} />
+          {/* NEW ROUTE */}
+          <Route
+            path="/ai/resume-analyzer"
+            element={
+              <PrivateRoute>
+                <ResumeAnalyzerPage />
+              </PrivateRoute>
+            }
+          />
         </Routes>
       </Router>
     </AuthProvider>

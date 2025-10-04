@@ -22,3 +22,14 @@ export const suggestReply = async (postId: string) =>{
   const res=await API.post('/ai/suggest', { postId });
   return res.data;
 };
+
+// NEW function for Resume/Portfolio Analysis
+export const analyzeResume = async (formData: FormData) => {
+  const res = await API.post('/ai/analyze-resume', formData, {
+    headers: {
+      // Crucial for file uploads via FormData
+      'Content-Type': 'multipart/form-data', 
+    },
+  });
+  return res.data;
+};

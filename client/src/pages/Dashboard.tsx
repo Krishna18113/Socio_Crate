@@ -27,6 +27,7 @@ export default function Dashboard() {
         <div className="space-x-4">
           <button onClick={() => navigate('/feed')} className="text-blue-500">Feed</button>
           <button onClick={() => navigate(`/users/${user?.id}`)} className="text-blue-500">My Profile</button>
+          <button onClick={() => navigate('/ai/resume-analyzer')} className="text-blue-500">Resume</button>
           <button onClick={() => { logout(); navigate('/login'); }} className="text-red-500">Logout</button>
         </div>
       </div>

@@ -1,11 +1,21 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, Part } from "@google/generative-ai";
+import { getGeminiAnalysis, geminiClient } from '../utils/geminiClient';
 
 const prisma = new PrismaClient();
 // Ensure environment variables are loaded in your server's entry file (e.g., index.ts)
 // for this to work correctly!
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
+function fileToGenerativePart(buffer: Buffer, mimeType: string): Part {
+  return {
+    inlineData: {
+      data: buffer.toString("base64"),
+      mimeType
+    },
+  };
+}
 
 // 🧠 AI PROMPTS
 const SYSTEM_SUMMARY_PROMPT = `You are a professional assistant summarizing discussions on a social platform. Your goal is to write a clear, concise, and neutral summary of the conversation around a specific post in 3-5 sentences.`;
@@ -133,6 +143,70 @@ export const suggestReply = async (req: Request, res: Response) => {
         return res.status(404).json({ message: error.message });
     }
     res.status(500).json({ message: "Failed to suggest a reply", error: error?.message });
+  }
+};
+
+export const analyzeResume = async (req: Request, res: Response) => {
+  const { rolePreference, portfolioLink } = req.body; // rolePreference is required
+  const file = req.file; // From multer.memoryStorage()
+  
+  if (!rolePreference) {
+    return res.status(400).json({ message: "Job role preference is required for analysis." });
+  }
+
+  const contents: (string | Part)[] = [];
+  let inputType = '';
+
+  try {
+    if (file) {
+      // 1. Handle PDF File Upload
+      const pdfPart = fileToGenerativePart(file.buffer, file.mimetype);
+      inputType = 'resume PDF';
+      contents.push(pdfPart);
+    } else if (portfolioLink) {
+      // 2. Handle Portfolio Link (treating it as text input)
+      inputType = 'portfolio link';
+      contents.push(`Please review and analyze the content accessible via this link: ${portfolioLink}.`);
+    } else {
+      return res.status(400).json({ message: "A resume file (PDF) or a portfolio link is required." });
+    }
+
+    // Main Prompt
+    const prompt = `You are a career coach AI. Analyze the provided ${inputType} for a user aiming for a **${rolePreference}** position. Provide a detailed, professional, and actionable report. The output MUST be a single, valid JSON object, strictly adhering to the schema provided in the function call. Do not include any other text or markdown outside the JSON block. Focus on resume quality (keywords, structure, grammar) and job readiness.`;
+
+    contents.push(prompt);
+
+    // Call the new Gemini analysis function
+    const jsonResponseText = await getGeminiAnalysis(contents);
+    
+    // 🔑 THE CRITICAL FIX: Robust JSON extraction
+    // Regex to find and extract the JSON block (handling markdown code fences)
+    const jsonMatch = jsonResponseText.match(/```json\s*([\s\S]*?)\s*```/i) || jsonResponseText.match(/\{[\s\S]*\}/);
+    
+    let jsonString: string;
+    
+    if (jsonMatch) {
+      jsonString = jsonMatch[1] || jsonMatch[0]; // Take group 1 (inside fences) or whole match
+    } else {
+        // Fallback if no markdown fences are found, assume the entire output is the JSON string
+        jsonString = jsonResponseText;
+    }
+
+    // Parse the structured JSON response
+    const analysisReport = JSON.parse(jsonString);
+
+    res.status(200).json(analysisReport);
+
+  } catch (error: any) {
+    console.error("Resume analysis failed:", error.message || error);
+    // Provide a more specific error message if it's a JSON parse issue
+    if (error instanceof SyntaxError) {
+        return res.status(500).json({ 
+            message: "Failed to parse AI response. The model returned malformed data.", 
+            details: error.message 
+        });
+    }
+    res.status(500).json({ message: "Failed to analyze the input. Please ensure the PDF is readable or the link is public." });
   }
 };
 
