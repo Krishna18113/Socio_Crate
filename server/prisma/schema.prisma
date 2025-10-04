@@ -24,6 +24,7 @@ model User {
   bio        String?
   profilePic String? // URL to profile picture
   resume     String? // for .pdf
+  description      String?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   posts      Post[]
