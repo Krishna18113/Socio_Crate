@@ -5,28 +5,72 @@ import fs from "fs";
 // Ensure the uploads folder exists
 const uploadPath = path.join(__dirname, "../../uploads");
 if (!fs.existsSync(uploadPath)) {
-  fs.mkdirSync(uploadPath, { recursive: true });
+  fs.mkdirSync(uploadPath, { recursive: true });
 }
 
 const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadPath);
-  },
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const filename = `${Date.now()}-${file.fieldname}${ext}`;
-    cb(null, filename);
-  }
+  destination: (_req, _file, cb) => {
+    cb(null, uploadPath);
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const filename = `${Date.now()}-${file.fieldname}${ext}`;
+    cb(null, filename);
+  }
 });
 
 const fileFilter = (_req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  const allowedTypes = [".png", ".pdf"];
-  const ext = path.extname(file.originalname).toLowerCase();
-  if (allowedTypes.includes(ext)) {
-    cb(null, true);
-  } else {
-    cb(new Error("Only .png and .pdf files are allowed"));
-  }
+  // 🔑 UPDATED: Allow common image and video formats for social media posts
+  const allowedExtensions = [".png", ".jpg", ".jpeg", ".mp4", ".mov", ".webm"]; 
+  const ext = path.extname(file.originalname).toLowerCase();
+  
+  // Also check the MIME type for better security/validation
+  const allowedMimeTypes = ["image/png", "image/jpeg", "video/mp4", "video/quicktime", "video/webm"];
+
+  if (allowedExtensions.includes(ext) && allowedMimeTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error(`Only ${allowedExtensions.join(', ').toUpperCase()} files are allowed for posts.`));
+  }
 };
 
-export const upload = multer({ storage, fileFilter });
+export const upload = multer({ 
+    storage, 
+    fileFilter,
+    limits: { fileSize: 20 * 1024 * 1024 } // Optional: Limit file size to 10MB
+});
+
+
+
+// import multer from "multer";
+// import path from "path";
+// import fs from "fs";
+
+// // Ensure the uploads folder exists
+// const uploadPath = path.join(__dirname, "../../uploads");
+// if (!fs.existsSync(uploadPath)) {
+//   fs.mkdirSync(uploadPath, { recursive: true });
+// }
+
+// const storage = multer.diskStorage({
+//   destination: (_req, _file, cb) => {
+//     cb(null, uploadPath);
+//   },
+//   filename: (_req, file, cb) => {
+//     const ext = path.extname(file.originalname);
+//     const filename = `${Date.now()}-${file.fieldname}${ext}`;
+//     cb(null, filename);
+//   }
+// });
+
+// const fileFilter = (_req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+//   const allowedTypes = [".png", ".pdf"];
+//   const ext = path.extname(file.originalname).toLowerCase();
+//   if (allowedTypes.includes(ext)) {
+//     cb(null, true);
+//   } else {
+//     cb(new Error("Only .png and .pdf files are allowed"));
+//   }
+// };
+
+// export const upload = multer({ storage, fileFilter });

@@ -20,6 +20,10 @@ app.use(cors({
   origin: 'http://localhost:5173',
   credentials: true, // Required if you're sending cookies/auth headers
 }));
+
+app.use(express.json({ limit: '20mb' })); 
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
+
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api", commentRoutes);
