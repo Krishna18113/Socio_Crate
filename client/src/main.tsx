@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import 'uno.css'
+// import 'uno.css'
+import './index.css';
 
 // import React from 'react';
 // import ReactDOM from 'react-dom/client';

@@ -152,7 +152,49 @@ export const deletePost = async (req: Request, res: Response): Promise<void> => 
     }
 };
 
+// 🔑 NEW CONTROLLER FUNCTION
+export const getUserPosts = async (req: Request, res: Response) => {
+    // The 'protect' middleware ensures req.user is populated
+    const userId = req.user?.id; 
 
+    if (!userId) {
+        // This should theoretically be unreachable if 'protect' works, but it's safe.
+        return res.status(401).json({ message: 'User not authenticated.' });
+    }
+
+    try {
+        const posts = await prisma.post.findMany({
+            where: {
+                // Filter posts by the logged-in user's ID
+                userId: userId, 
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true, // 🔑 Select ID for client-side keys/links
+                        name: true,
+                        profilePic: true, // Include profile pic for the author
+                    },
+                },
+                files: true,
+                comments: {
+                    include: {
+                        user: {
+                            select: { id: true, name: true },
+                        },
+                    },
+                },
+            },
+            orderBy: { createdAt: "desc" },
+        });
+
+        // Send the array of user-specific posts
+        res.json(posts);
+    } catch (err) {
+        console.error('Error fetching user posts:', err);
+        res.status(500).json({ message: 'Error fetching user posts.' });
+    }
+};
 
 
 // import { Request, Response } from "express";

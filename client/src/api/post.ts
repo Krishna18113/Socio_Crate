@@ -18,6 +18,14 @@ export const getPosts = async () => {
   return res.data;
 };
 
+// 🔑 NEW API FUNCTION: Fetches posts specifically for the logged-in user
+export const getMyPosts = async () => {
+    // Hits the new /api/posts/me endpoint
+    const res = await API.get('/posts/me');
+    // Your server returns the array directly, so we return res.data
+    return res.data;
+};
+
 // 🔑 UPDATED: Allows 'data' to be either a simple object or FormData
 type PostData = { content: string } | FormData; 
 
