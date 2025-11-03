@@ -23,12 +23,14 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
       const res = await uploadFile(file);
       setMessage(res.message);
 
+      const baseURL = import.meta.env.VITE_API_URL.replace("/api", "");
+
       // ✅ Updated logic for profilePic handling
       if (onUploadSuccess && res.profilePic) {
         onUploadSuccess({
           id: "profilePic", // dummy id since this isn't a separate file record
           filename: file.name,
-          url: res.profilePic,//url: `http://localhost:5000${res.profilePic}`,
+          url: `${baseURL}${res.profilePic}`,//url: `http://localhost:5000${res.profilePic}`,
         });
       }
       setFile(null);
