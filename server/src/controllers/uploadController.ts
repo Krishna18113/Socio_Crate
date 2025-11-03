@@ -12,7 +12,7 @@ export const handleFileUpload = async (req: Request, res: Response) => {
       return;
     }
 
-    const newFilePath = `/uploads/${req.file.filename}`;
+    const newFilePath = `${process.env.BASE_URL || "https://sociocrate.onrender.com"}/uploads/${req.file.filename}`;;//`/uploads/${req.file.filename}`;
 
     const user = await prisma.user.findUnique({
       where: { id: userId },

@@ -28,7 +28,8 @@ export const createPost = async (req: Request, res: Response): Promise<void> => 
 
     // 1. Prepare data structure for multiple file creation (createMany)
     const fileData = files ? files.map(file => ({
-        url: `/uploads/${file.filename}`, // Local storage path
+        url: `${process.env.BASE_URL || "https://sociocrate.onrender.com"}/uploads/${file.filename}`,
+        //url: `/uploads/${file.filename}`, // Local storage path
         type: getMediaType(file.mimetype), // Determine type (image/video/other)
         userId: userId!, // Link file to the user who uploaded it
     })) : [];
